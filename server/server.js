@@ -24,7 +24,7 @@ app.post('/todos', (req, res) => {
     , (e) => {
       res.status(400).send(e);
     },
-  );
+  ).catch(e => console.log(e));
 });
 
 app.get('/todos', (req, res) => {
@@ -34,7 +34,7 @@ app.get('/todos', (req, res) => {
     });
   }, (e) => {
     res.status(400).send(e);
-  });
+  }).catch(e => console.log(e));
 });
 
 app.get('/todos/:id', (req, res) => {
