@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Connection URL
-const url = 'mongodb://localhost:27017';
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
 // Database Name
 const dbName = 'TodoApp';
