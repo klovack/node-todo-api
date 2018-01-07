@@ -3,6 +3,9 @@
     "rules": {
       "no-console": "warn",
       "no-trailing-spaces": "off",
-      "no-underscore-dangle": "off"
+      "no-underscore-dangle": "off",
+      "no-undef": "warn",
+      "no-unused-vars": "warn",
+      "consistent-return": "off"
     }
 }
