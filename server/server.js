@@ -70,9 +70,7 @@ app.delete('/todos/:id', (req, res) => {
       }
 
       return res.status(200).send({ todo });
-    }).catch((e) => {
-      return res.status(400).send();
-    });
+    }).catch(e => res.status(400).send());
 });
 
 app.patch('/todos/:id', (req, res) => {
@@ -96,9 +94,30 @@ app.patch('/todos/:id', (req, res) => {
         return res.status(404).send();
       }
       return res.send({ todo });
-    }).catch((e) => {
-      return res.status(400).send();
+    }).catch(e => res.status(400).send());
+});
+
+app.post('/users', (req, res) => {
+  const body = _.pick(req.body, ['email', 'password']);
+  const user = new User(body);
+
+  user.save()
+    .then(() => user.generateAuthToken())
+    .then(token => res.header('x-auth', token).send(user))
+    .catch((e) => {
+      console.log(e);
+      return res.status(404).send();
     });
+});
+
+app.get('/users', (req, res) => {
+  User.find().then((users) => {
+    res.send({
+      users,
+    });
+  }, (e) => {
+    res.status(400).send(e);
+  }).catch(e => console.log(e));
 });
 
 app.listen(port, () => {
