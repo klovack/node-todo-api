@@ -109,7 +109,7 @@ describe('GET /todos/:id', () => {
       .set('x-auth', users[0].tokens[0].token)
       .expect(404)
       .expect((res) => {
-        expect(res.body.todo).toNotExist();
+        expect(res.body.todo).toBeUndefined();
       })
       .end(done);
   });
@@ -133,7 +133,7 @@ describe('DELETE /todos/:id', () => {
         
         Todo.findById(hexId)
           .then((todo) => {
-            expect(todo).toNotExist();
+            expect(todo).toBeNull();
             done();
           }).catch(e => done(e));
       });
@@ -165,7 +165,7 @@ describe('DELETE /todos/:id', () => {
       .set('x-auth', users[1].tokens[0].token)
       .expect(404)
       .expect((res) => {
-        expect(res.body.todo).toNotExist();
+        expect(res.body.todo).toBeUndefined();
       })
       .end((err, res) => {
         if (err) {
@@ -174,12 +174,11 @@ describe('DELETE /todos/:id', () => {
         
         Todo.findById(hexId)
           .then((todo) => {
-            expect(todo).toExist();
+            expect(todo).toBeTruthy();
             done();
           }).catch(e => done(e));
       });
   });
-
 });
 
 describe('PATCH /todos/:id', () => {
@@ -199,7 +198,8 @@ describe('PATCH /todos/:id', () => {
       .expect((res) => {
         expect(res.body.todo.text).toBe(updatedTodo.text);
         expect(res.body.todo.completed).toBe(true);
-        expect(res.body.todo.completedAt).toBeA('number');
+        // expect(res.body.todo.completedAt);
+        expect(typeof res.body.todo.completedAt).toBe('number');
       })
       .end(done);
   });
@@ -215,7 +215,7 @@ describe('PATCH /todos/:id', () => {
       .expect((res) => {
         expect(res.body.todo.text).toBe('Updated');
         expect(res.body.todo.completed).toBe(false);
-        expect(res.body.completedAt).toNotExist();
+        expect(res.body.completedAt).toBeUndefined();
       })
       .end(done);
   });
@@ -234,7 +234,7 @@ describe('PATCH /todos/:id', () => {
       .send(updatedTodo)
       .expect(404)
       .expect((res) => {
-        expect(res.body.todo).toNotExist();
+        expect(res.body.todo).toBeUndefined();
       })
       .end((err, res) => {
         if (err) {
@@ -285,8 +285,8 @@ describe('POST /users', () => {
       .send({ email, password })
       .expect(200)
       .expect((res) => {
-        expect((res.headers['x-auth'])).toExist();
-        expect((res.body._id)).toExist();
+        expect((res.headers['x-auth'])).toBeDefined();
+        expect((res.body._id)).toBeDefined();
         expect((res.body.email)).toBe(email);
       })
       .end((err) => {
@@ -296,8 +296,8 @@ describe('POST /users', () => {
 
         User.findOne({ email })
           .then((user) => {
-            expect(user).toExist();
-            expect(user.password).toNotBe(password);
+            expect(user).toBeDefined();
+            expect(user.password).not.toBe(password);
             done();
           })
           .catch(e => done(e));
@@ -316,7 +316,6 @@ describe('POST /users', () => {
   });
 
   it('should not create user if email in use', (done) => {
-
     request(app)
       .post('/users')
       .send({ email: users[0].email, password: users[0].password })
@@ -335,7 +334,7 @@ describe('POST /users/login', () => {
       })
       .expect(200)
       .expect((res) => {
-        expect((res.headers['x-auth'])).toExist();
+        expect((res.headers['x-auth'])).toBeDefined();
       })
       .end((err, res) => {
         if (err) {
@@ -344,7 +343,7 @@ describe('POST /users/login', () => {
 
         User.findById(users[1]._id)
           .then((user) => {
-            expect(user.tokens[1]).toInclude({
+            expect(user.toObject().tokens[1]).toMatchObject({
               access: 'auth',
               token: res.headers['x-auth'],
             });
@@ -363,7 +362,7 @@ describe('POST /users/login', () => {
       })
       .expect(400)
       .expect((res) => {
-        expect((res.headers['x-auth'])).toNotExist();
+        expect((res.headers['x-auth'])).toBeUndefined();
       })
       .end((err, res) => {
         if (err) {
@@ -380,7 +379,7 @@ describe('POST /users/login', () => {
   });
 });
 
-describe('DELETE /users/me/token', () => {
+describe('DELETE /users/me/logout', () => {
   it('should remove x-auth token on logout', (done) => {
     // DELETE /users/me/token
     // Set x-auth equal to token
@@ -388,11 +387,11 @@ describe('DELETE /users/me/token', () => {
     // Find user, verify token is zero
 
     request(app)
-      .delete('/users/me/token')
+      .delete('/users/me/logout')
       .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
-        expect((res.headers['x-auth'])).toNotExist();
+        expect((res.headers['x-auth'])).toBeUndefined();
       })
       .end((err, res) => {
         if (err) {
