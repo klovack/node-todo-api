@@ -8,14 +8,17 @@ const { authenticate } = require('../../middleware/authenticate');
 
 router.use(bodyParser.json());
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
   const user = new User(body);
   
-  user.save()
-    .then(() => user.generateAuthToken())
-    .then(token => res.header('x-auth', token).send(user))
-    .catch(e => res.status(400).send());
+  try {
+    await user.save();
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+  } catch (error) {
+    res.status(400).send();
+  }
 });
 
 router.get('/', (req, res) => {
@@ -27,26 +30,25 @@ router.get('/', (req, res) => {
 
 router.get('/me', authenticate, (req, res) => res.send(req.user));
 
-router.post('/login', (req, res) => {
-  const body = _.pick(req.body, ['email', 'password']);
-
-  User.findByCredentials(body.email, body.password)
-    .then((user) => {
-      user.generateAuthToken()
-        .then((token) => {
-          res.header('x-auth', token).send(user);
-        });
-    })
-    .catch(e => res.status(400).send());
+router.post('/login', async (req, res) => {
+  try {
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = await User.findByCredentials(body.email, body.password);
+    const token = await user.generateAuthToken();
+  
+    res.header('x-auth', token).send(user);
+  } catch (error) {
+    res.status(400).send();
+  }
 });
 
-router.delete('/me/logout', authenticate, (req, res) => {
-  req.user.removeToken(req.token)
-    .then(() => {
-      res.status(200).send();
-    }, () => {
-      res.status(400).send();
-    });
+router.delete('/me/logout', authenticate, async (req, res) => {
+  try {
+    await req.user.removeToken(req.token);
+    res.status(200).send();
+  } catch (error) {
+    res.status(400).send();
+  }
 });
 
 module.exports = router;

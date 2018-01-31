@@ -56,24 +56,22 @@ router.get('/:id', authenticate, (req, res) => {
     res.status(400).send());
 });
 
-router.delete('/:id', authenticate, (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   const { id } = req.params;
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
+  }  
+  try {
+    const todo = await Todo.findOneAndRemove({ _id: id, _creator: req.user._id });
+    if (!todo) {
+      return res.status(404).send();
+    }
+  
+    return res.status(200).send({ todo });
+  } catch (error) {
+    res.status(400).send();
   }
-
-  Todo.findOneAndRemove({
-    _id: id,
-    _creator: req.user._id,
-  })
-    .then((todo) => {
-      if (!todo) {
-        return res.status(404).send();
-      }
-
-      return res.status(200).send({ todo });
-    }).catch(e => res.status(400).send());
 });
 
 router.patch('/:id', authenticate, (req, res) => {
